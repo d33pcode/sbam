@@ -90,3 +90,5 @@ ENV/
 
 # Misc
 sbam.db
+notes
+test.py
