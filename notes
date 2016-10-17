@@ -1,0 +1,4 @@
+- check if usb drive is plugged in
+- compress (tarfile)
+- encrypt (beefish?)
+- local backups inventory database (peewee)
