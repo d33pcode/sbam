@@ -66,7 +66,7 @@ class DatabaseManager:
 		connection.commit()
 		connection.close()
 
-	def listBackups(self, n=1, backup_path=None):
+	def listBackups(self, n, backup_path=None):
 		'''
 			Returns a list of the last n backups
 			ordered by date
@@ -75,9 +75,9 @@ class DatabaseManager:
 		cursor = connection.cursor()
 		backups = []
 		if backup_path:
-			query = "select original_path from backups where file_path = \'%s\' order by backup_date desc limit %s" % (backup_path, str(n))
+			query = "select file_path, original_path, backup_date from backups where file_path = \'%s\' order by backup_date desc limit 1" % backup_path
 		else:
-			query = "select original_path from backups order by backup_date desc limit " + str(n)
+			query = "select file_path, original_path, backup_date from backups order by backup_date desc limit 1"
 		for entry in cursor.execute(query):
 			backups.append(entry)
 		connection.close()

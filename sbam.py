@@ -74,10 +74,11 @@ if __name__ == '__main__' :
 		if args.restore_path == 'last_backup':
 			db_manager = DatabaseManager()
 			table = db_manager.listBackups(1)
-			backup_path = table[0][0]
-			original_path = table[0][1]
-			print "backup path: " + backup_path
-			print "original_path: " + original_path
+			print table
+			# backup_path = table[0][0]
+			# original_path = table[0][1]
+			# print "backup path: " + backup_path
+			# print "original_path: " + original_path
 		else:
 			print 'you specified a backup'
 
