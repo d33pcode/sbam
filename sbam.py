@@ -21,8 +21,10 @@ import os, sys, argparse
 from getpass import getpass
 from dirtools import Dir
 from datetime import datetime
-from agents import compressor, encrypter, databasemanager
+from agents import compressor, encrypter
+from agents.databasemanager import DatabaseManager
 from agents.utils.progressbar import ProgressBar
+from tabulate import tabulate
 
 if __name__ == '__main__' :
 
@@ -37,7 +39,7 @@ if __name__ == '__main__' :
 
 	parser.add_argument('-l', '--list', dest='entries_number', type=int, nargs='?', const=3, help = 'List the last N backups (default: 3)')
 	parser.add_argument('-f' , '--folder', dest='folder', help = 'The folder to backup')
-	parser.add_argument('-r', '--restore', dest='restore_path', help = 'Restore a backup for folder if exists')
+	parser.add_argument('-r', '--restore', dest='restore_path', nargs='?', const='last_backup', help = 'Restore a backup for [RESTORE_PATH] if exists (default: last backup)')
 	parser.add_argument('-d', '--drive', dest='drive_path', help = 'Specify an external drive for backup')
 	parser.add_argument('-e', '--encrypt', help = 'Encrypt the folder', action = 'store_true')
 	parser.add_argument('-F', '--forget', help = "Don't save this backup in the database", action = 'store_true')
@@ -46,6 +48,8 @@ if __name__ == '__main__' :
 
 	if args.folder:
 		path = args.folder.replace('~', os.environ['HOME'])
+		if not args.folder.startswith('/'):
+			sys.exit('Please specify the full path.')
 		path_dirs = path.split('/')
 		dirname = path_dirs[len(path_dirs)-1]
 
@@ -62,14 +66,25 @@ if __name__ == '__main__' :
 		if not args.forget:
 			print 'Updating the database...'
 			today = str(datetime.today()).split(' ')[0]
-			db_manager = databasemanager.DatabaseManager()
+			db_manager = DatabaseManager()
 			db_manager.handleTransaction("INSERT INTO backups(file_path, original_path, backup_date, synced) VALUES(\'" + compressed_path + "\', \'" + path + "\', \'" + today + "\', " + "0" + ")")
 			print 'Database updated.'
 
 	elif args.restore_path:
-		print 'No.'
+		if args.restore_path == 'last_backup':
+			db_manager = DatabaseManager()
+			table = db_manager.listBackups(1)
+			backup_path = table[0][0]
+			original_path = table[0][1]
+			print "backup path: " + backup_path
+			print "original_path: " + original_path
+		else:
+			print 'you specified a backup'
 
 	elif args.entries_number:
-		print args.entries_number
+		db_manager = DatabaseManager()
+		table = db_manager.listBackups(args.entries_number)
+		headers = ['backup path', 'original path', 'date']
+		print tabulate(table, headers, tablefmt="fancy_grid")
 	else:
 		parser.print_help()

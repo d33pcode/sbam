@@ -53,17 +53,32 @@ class DatabaseManager:
 		cursor = connection.cursor()
 
 		for command in commands:
-			print command
 			cursor.execute(command)
 
 		connection.commit() # save changes
 		connection.close() # don't EVER leave a connection open!
 
 	def addBackup(self, file_path, original_path, backup_date, synced):
-		print file_path
 		connection = sqlite3.connect(self.db_path)
 		cursor = connection.cursor()
 		cursor.executemany("INSERT INTO backups(file_path, original_path, backup_date, synced) VALUES (?,?,?,?)", [file_path, original_path, backup_date, synced])
 
 		connection.commit()
 		connection.close()
+
+	def listBackups(self, n=1, backup_path=None):
+		'''
+			Returns a list of the last n backups
+			ordered by date
+		'''
+		connection = sqlite3.connect(self.db_path)
+		cursor = connection.cursor()
+		backups = []
+		if backup_path:
+			query = "select original_path from backups where file_path = \'%s\' order by backup_date desc limit %s" % (backup_path, str(n))
+		else:
+			query = "select original_path from backups order by backup_date desc limit " + str(n)
+		for entry in cursor.execute(query):
+			backups.append(entry)
+		connection.close()
+		return backups

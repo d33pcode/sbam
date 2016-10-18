@@ -20,18 +20,21 @@ def compress(path):
 	'''
 		Compresses input path to default backup folder
 	'''
-	d = Dir(path)
+	try:
+		dir = Dir(path)
+	except TypeError:
+		sys.exit('You must select a valid directory')
 	archive_path = generate_archive_path(path)
 
 	if (os.path.exists(archive_path)):
 		replace = questions.queryYesNo("WARNING: you already did a backup today. Do you want to replace it?", default="no")
 		if not replace:
 			sys.exit('Backup canceled.')
-	return d.compress_to(archive_path) # the result is the path of the compressed archive
+	return dir.compress_to(archive_path) # the result is the path of the compressed archive
 
 def generate_archive_path(path):
 	'''
-		example:	/var/backups/lobam/d33pcode-Dev-2016-10-10
+		example:	/var/backups/sbam/d33pcode-Dev-2016-10-10
 	'''
 	base_path = '/var/backups/sbam/'
 	if (not os.path.exists(base_path)):
