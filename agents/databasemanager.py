@@ -18,8 +18,7 @@ __status__ = "Prototype"
 __date__ = "2016-10-11"
 
 import sqlite3
-from os import environ as env
-from os.path import isfile, getsize
+import os
 
 class DatabaseManager:
 
@@ -44,41 +43,54 @@ class DatabaseManager:
 
 	def handleTransaction(self, *commands):
 		'''
-			- Opens a connection to the SQLite database
-			- If database is opened successfully, it returns a connection object
-			- If given database name does not exist then this call will create the database
-			- Executes every command
+			Opens a connection to the SQLite database;
+			If given database name does not exist,
+			then this call will create the database
+			Executes every command
 		'''
 		connection = sqlite3.connect(self.db_path)
-		cursor = connection.cursor()
-
-		for command in commands:
-			cursor.execute(command)
-
-		connection.commit() # save changes
-		connection.close() # don't EVER leave a connection open!
+		with connection:	# automatically commit and close
+			cursor = connection.cursor()
+			for command in commands:
+				cursor.execute(command)
 
 	def addBackup(self, file_path, original_path, backup_date, synced):
 		connection = sqlite3.connect(self.db_path)
-		cursor = connection.cursor()
-		cursor.executemany("INSERT INTO backups(file_path, original_path, backup_date, synced) VALUES (?,?,?,?)", [file_path, original_path, backup_date, synced])
+		with connection:
+			cursor = connection.cursor()
+			cursor.executemany("INSERT INTO backups(file_path, original_path, backup_date, synced) VALUES (?,?,?,?)", [file_path, original_path, backup_date, synced])
 
-		connection.commit()
-		connection.close()
-
-	def listBackups(self, n, backup_path=None):
+	def listBackups(self, n=3, backup_path=None):
 		'''
 			Returns a list of the last n backups
 			ordered by date
 		'''
+		self.cleanDb()
 		connection = sqlite3.connect(self.db_path)
 		cursor = connection.cursor()
 		backups = []
 		if backup_path:
-			query = "select file_path, original_path, backup_date from backups where file_path = \'%s\' order by backup_date desc limit 1" % backup_path
+			query = "select file_path, original_path, backup_date from backups where file_path = \'%s\' order by backup_date desc limit %s" % (backup_path, str(n))
 		else:
-			query = "select file_path, original_path, backup_date from backups order by backup_date desc limit 1"
+			query = "select file_path, original_path, backup_date from backups order by backup_date desc limit " + str(n)
 		for entry in cursor.execute(query):
 			backups.append(entry)
 		connection.close()
 		return backups
+
+	def cleanDb(self):
+		'''
+			Cleans the database
+			removing entries that no longer exist
+		'''
+		query = "select file_path from backups"
+		connection = sqlite3.connect(self.db_path)
+		with connection:
+			cursor = connection.cursor()
+			results = []
+			cursor.execute(query)
+			for res in cursor.fetchall():
+				folder = res[0]
+				if not os.path.exists(folder):
+					cursor.execute("delete from backups where file_path = \'%s\'" % folder) # sorry for that, but i couldn't find any better way.
+		return results

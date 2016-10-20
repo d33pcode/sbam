@@ -65,7 +65,7 @@ if __name__ == '__main__' :
 
 		if not args.forget:
 			print 'Updating the database...'
-			today = str(datetime.today()).split(' ')[0]
+			today = datetime.today().isoformat().split('.')[0]
 			db_manager = DatabaseManager()
 			db_manager.handleTransaction("INSERT INTO backups(file_path, original_path, backup_date, synced) VALUES(\'" + compressed_path + "\', \'" + path + "\', \'" + today + "\', " + "0" + ")")
 			print 'Database updated.'
@@ -75,16 +75,18 @@ if __name__ == '__main__' :
 			db_manager = DatabaseManager()
 			table = db_manager.listBackups(1)
 			print table
-			# backup_path = table[0][0]
-			# original_path = table[0][1]
-			# print "backup path: " + backup_path
-			# print "original_path: " + original_path
+			backup_path = table[0][0]
+			original_path = table[0][1]
+			print "backup path: " + backup_path
+			print "original_path: " + original_path
 		else:
 			print 'you specified a backup'
 
 	elif args.entries_number:
 		db_manager = DatabaseManager()
 		table = db_manager.listBackups(args.entries_number)
+		if not table:
+			print "There are no backups here."
 		headers = ['backup path', 'original path', 'date']
 		print tabulate(table, headers, tablefmt="fancy_grid")
 	else:
