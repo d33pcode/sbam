@@ -22,9 +22,12 @@ import os
 
 class DatabaseManager:
 
-	db_path = "sbam.db"
+	config_dir =os.environ['HOME'] +'/.config/sbam/'
+	db_path = config_dir + 'sbam.db'
 
 	def __init__(self):
+		if not os.path.isdir(self.config_dir):
+			os.makedirs(self.config_dir)
 		self.buildDatabase()
 
 	def buildDatabase(self):
