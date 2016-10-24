@@ -40,10 +40,10 @@ if __name__ == '__main__' :
 	parser.add_argument('-l', '--list', dest='entries_number', type=int, nargs='?', const=3, help = 'List the last N backups (default: 3)')
 	parser.add_argument('-f' , '--folder', dest='folder', help = 'The folder to backup')
 	parser.add_argument('-r', '--restore', dest='restore_path', nargs='?', const='last_backup', help = 'Restore a backup for [RESTORE_PATH] if exists (default: last backup)')
-	parser.add_argument('-d', '--drive', dest='drive_path', help = 'Specify an external drive for backup')
+	# parser.add_argument('-d', '--drive', dest='drive_path', help = 'Specify an external drive for backup')
 	parser.add_argument('-e', '--encrypt', help = 'Encrypt the folder', action = 'store_true')
 	parser.add_argument('-F', '--forget', help = "Don't save this backup in the database", action = 'store_true')
-	parser.add_argument('-v', '--verbose', help = 'Display verbose output', action = 'store_true')
+	# parser.add_argument('-v', '--verbose', help = 'Display verbose output', action = 'store_true')
 	args = parser.parse_args()
 
 	if args.folder:
