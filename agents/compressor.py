@@ -25,7 +25,7 @@ def compress(path):
 	archive_path = generate_archive_path(path=path)
 
 	if (os.path.exists(archive_path)):
-		replace = questions.queryYesNo("WARNING: you already did a backup today. Do you want to replace it?", default="no")
+		replace = questions.queryYesNo("WARNING: you already have a backup for this folder. Do you want to replace it?", default="no")
 		if not replace:
 			sys.exit('Backup canceled.')
 	print 'Creating the bzip2 archive...'
