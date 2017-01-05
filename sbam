@@ -47,9 +47,9 @@ if __name__ == '__main__' :
 	args = parser.parse_args()
 
 	if args.folder:
-		path = args.folder.replace('~', os.environ['HOME'])
-		if not args.folder.startswith('/'):
-			sys.exit('Please specify the full path.')
+		path = os.path.realpath(args.folder)
+		if not (os.path.isdir(path)):
+			sys.exit('Please specify a folder.')
 		path_dirs = path.split('/')
 		dirname = path_dirs[len(path_dirs)-1]
 
@@ -86,7 +86,8 @@ if __name__ == '__main__' :
 		table = db_manager.listBackups(args.entries_number)
 		if not table:
 			print "There are no backups here."
-		headers = ['backup path', 'original path', 'date']
-		print tabulate(table, headers, tablefmt="fancy_grid")
+		else:
+			headers = ['backup path', 'original path', 'date']
+			print tabulate(table, headers, tablefmt="fancy_grid")
 	else:
 		parser.print_help()
