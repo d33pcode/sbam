@@ -15,11 +15,12 @@ import os
 from Crypto.Cipher import _Blowfish
 from struct import pack
 
-def encrypt(in_filepath, out_filepath, key):
+def encrypt(in_filepath, key):
     '''
         Encrypt the specified file with the specified
         key and output to the chosen output file.
     '''
+    out_filepath = in_filepath + '.enc'
     size = os.path.getsize(in_filepath)
     infile = open(in_filepath, 'rb')
     outfile = open(out_filepath, 'wb')
@@ -37,6 +38,8 @@ def encrypt(in_filepath, out_filepath, key):
     finaldata = reverseBytes(encrypted_data)
     outfile.write(finaldata)
     outfile.close()
+    os.remove(in_filepath) # new backup is stored as compressed_path.enc
+
 
 
 def decrypt(in_filepath, out_filepath, key):

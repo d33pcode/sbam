@@ -59,8 +59,7 @@ if __name__ == '__main__' :
 
 		if args.encrypt:
 			key = getpass('Insert a password: ')
-			encrypter.encrypt(compressed_path, compressed_path + '.enc', key)
-			os.remove(compressed_path) # new backup is stored as compressed_path.enc
+			encrypter.encrypt(compressed_path, key)
 			print 'Backup encrypted.'
 
 		if not args.forget:
