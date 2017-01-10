@@ -56,6 +56,9 @@ if __name__ == '__main__':
                         help='Display verbose output', action='store_true')
     args = parser.parse_args()
 
+    print vars(args)
+    print type(args)
+
     if args.verbose:
         logging.basicConfig(format='%(message)s', level=logging.DEBUG)
     else:
@@ -70,8 +73,7 @@ if __name__ == '__main__':
 
         logging.info('Compressing ' + dirname + '...')
         compressed_path = compressor.compress(path)
-
-        if (compressed_path):   # continue only if the compression was successful
+        if (compressed_path):
             logging.info('Done.')
 
             if args.encrypt:
@@ -83,7 +85,7 @@ if __name__ == '__main__':
                 logging.debug('Updating the database...')
                 today = datetime.today().isoformat().split('.')[0]
                 db_manager = DatabaseManager()
-                db_manager.handleTransaction("INSERT INTO backups(file_path, original_path, backup_date, synced) VALUES(\'" +
+                db_manager.handleTransaction("INSERT OR IGNORE INTO backups(file_path, original_path, backup_date, synced) VALUES(\'" +
                                              compressed_path + "\', \'" + path + "\', \'" + today + "\', " + "0" + ")")
                 logging.info('Database updated.')
             else:
