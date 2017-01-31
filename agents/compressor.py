@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Handles folder compression with tar.
+Handles folder compression and decompression.
 """
 
 __author__ = "d33pcode"
@@ -10,21 +10,22 @@ __version__ = "1.0"
 __status__ = "Prototype"
 __date__ = "2016-10-10"
 
+import datetime
+import logging
 import os
 import sys
-from utils import questions, parser
-import datetime
 import tarfile
-import logging
+
+from utils import parser, questions
 
 
 def compress(path):
     '''
     Stores a folder inside a tar archive compressed with bzip2
     path:
-            the full path of the folder to compress
+        the full path of the folder to compress
     return:
-            the path of the new archive or None
+        the path of the new archive or None
     '''
     archive_path = generate_archive_path(path=path)
 
@@ -46,15 +47,25 @@ def compress(path):
     return archive_path
 
 
+def decompress(backup_path, restore_path='.'):
+    logging.debug('Opening ' + backup_path + '...')
+    tar = tarfile.open(backup_path, "r:bz2")
+    for item in tar:
+        logging.debug('Extracting ' + str(item) + '...')
+        tar.extract(item, restore_path)
+        if item.name.find(".tgz") != -1 or item.name.find(".tar") != -1:
+            decompress(item.name, "./" + item.name[:item.name.rfind('/')])
+
+
 def generate_archive_path(path, base_path='/var/backups/sbam/'):
     '''
     Generates a path for the archive.
     path:
-            the original path
+        the original path
     base_path:
-            the directory in which the archive will be stored
+        the directory in which the archive will be stored
     example:
-            /var/backups/sbam/Dev-2016-10-10
+        /var/backups/sbam/Dev-2016-10-10
     '''
     logging.debug('Geneating archive path...')
     if (not os.path.exists(base_path)):
