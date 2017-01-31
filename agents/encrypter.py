@@ -1,4 +1,4 @@
- #!/usr/bin/env python
+#!/usr/bin/env python
 """
     Provides methods for encryption and decryption using Blowfish.
 """
@@ -9,11 +9,13 @@ __credits__ = "adamb70 @ github"
 __license__ = "GPL"
 __version__ = "1.0"
 __status__ = "Prototype"
-__date__ = 2016-10-11
+__date__ = "2016-10-11"
 
 import os
-from Crypto.Cipher import _Blowfish
 from struct import pack
+
+from Crypto.Cipher import _Blowfish
+
 
 def encrypt(in_filepath, key):
     '''
@@ -28,9 +30,9 @@ def encrypt(in_filepath, key):
     infile.close()
 
     if size % 8 > 0:  # Add padding if size if not divisible by 8
-        extra = 8-(size % 8)
-        padding = [0]*extra
-        padding = pack('b'*extra, *padding)
+        extra = 8 - (size % 8)
+        padding = [0] * extra
+        padding = pack('b' * extra, *padding)
         data += padding
 
     revdata = reverseBytes(data)
@@ -38,8 +40,7 @@ def encrypt(in_filepath, key):
     finaldata = reverseBytes(encrypted_data)
     outfile.write(finaldata)
     outfile.close()
-    os.remove(in_filepath) # new backup is stored as compressed_path.enc
-
+    os.remove(in_filepath)  # new backup is stored as compressed_path.enc
 
 
 def decrypt(in_filepath, out_filepath, key):
@@ -88,15 +89,15 @@ def reverseBytes(data):
 
     reversedbytes = bytearray()
     i = 0
-    for x in range(0, data_size/4):
-        a = (data[i:i+4])
+    for x in range(0, data_size / 4):
+        a = (data[i:i + 4])
         i += 4
         z = 0
 
         n0 = a[z]
-        n1 = a[z+1]
-        n2 = a[z+2]
-        n3 = a[z+3]
+        n1 = a[z + 1]
+        n2 = a[z + 2]
+        n3 = a[z + 3]
         reversedbytes.append(n3)
         reversedbytes.append(n2)
         reversedbytes.append(n1)
