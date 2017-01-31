@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
-	Provides utilities for database creation and manteinance.
+    Provides utilities for database creation and manteinance.
 
-	Detailed description.
-	Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-	Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-	ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit
-	in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+    Detailed description.
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+    sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
+    ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit
+    in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
 """
 
 __author__ = "d33pcode"
@@ -23,7 +23,11 @@ import os
 
 class DatabaseManager:
 
-    config_dir = '/home/' + os.environ['SUDO_USER'] + '/.config/sbam/'
+    try:
+        config_dir = '/home/' + os.environ['SUDO_USER'] + '/.config/sbam/'
+    except KeyError:
+        config_dir = ''
+
     db_path = config_dir + 'sbam.db'
 
     def __init__(self):
@@ -33,15 +37,15 @@ class DatabaseManager:
 
     def buildDatabase(self):
         self.handleTransaction( """
-			CREATE TABLE IF NOT EXISTS backups (
-				id INTEGER PRIMARY KEY AUTOINCREMENT ,
-				file_path TEXT,
-				original_path TEXT,
-				backup_date DATE,
-				synced BOOLEAN,
-				UNIQUE(file_path)
-			);
-		""")
+            CREATE TABLE IF NOT EXISTS backups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT ,
+                file_path TEXT,
+                original_path TEXT,
+                backup_date DATE,
+                synced BOOLEAN,
+                UNIQUE(file_path)
+            );
+        """)
 
     def destroyDatabase(self):
         self.handleTransaction("DROP TABLE IF EXISTS backups")
