@@ -2,12 +2,7 @@
 """
 Simple Backup Manager.
 
-Detailed description.
-Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit
-in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+The main class interprets user's arguments as request for the agents.
 """
 
 __author__ = "d33pcode"
@@ -17,18 +12,20 @@ __version__ = "1.0"
 __status__ = "Prototype"
 __date__ = "2016-10-10"
 
-import os
-import sys
 import argparse
 import logging
-from getpass import getpass
-from dirtools import Dir
+import os
+import sys
 from datetime import datetime
+from getpass import getpass
+
+from tabulate import tabulate
+
 from agents import compressor, encrypter
 from agents.databasemanager import DatabaseManager
-from agents.utils import parser
+from agents.utils import parser, questions
 from agents.utils.progressbar import ProgressBar
-from tabulate import tabulate
+from dirtools import Dir
 
 if __name__ == '__main__':
     if not os.geteuid() == 0:  # check root privileges
@@ -44,8 +41,8 @@ if __name__ == '__main__':
                         nargs='?', const=3, help='List the last N backups (default: 3)')
     parser.add_argument('-f', '--folder', dest='folder',
                         help='The folder to backup')
-    parser.add_argument('-r', '--restore', dest='restore_path', nargs='?', const='last_backup',
-                        help='Restore a backup for [RESTORE_PATH] if exists (default: last backup)')
+    parser.add_argument('-r', '--restore', dest='backup_path', nargs='?', const='last_backup',
+                        help='Restore a backup from [BACKUP_PATH] if exists (default: last backup)')
     # parser.add_argument('-d', '--drive', dest='drive_path', help = 'Specify
     # an external drive for backup')
     parser.add_argument('-e', '--encrypt',
@@ -55,9 +52,6 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose',
                         help='Display verbose output', action='store_true')
     args = parser.parse_args()
-
-    print vars(args)
-    print type(args)
 
     if args.verbose:
         logging.basicConfig(format='%(message)s', level=logging.DEBUG)
@@ -73,6 +67,7 @@ if __name__ == '__main__':
 
         logging.info('Compressing ' + dirname + '...')
         compressed_path = compressor.compress(path)
+
         if (compressed_path):
             logging.info('Done.')
 
@@ -92,17 +87,33 @@ if __name__ == '__main__':
                 logging.debug(
                     'FORGET option specified: backup not saved to database.')
 
-    elif args.restore_path:
-        if args.restore_path == 'last_backup':
-            db_manager = DatabaseManager()
+    elif args.backup_path:
+        db_manager = DatabaseManager()
+        backup_path = ''
+        original_path = ''
+
+        if args.backup_path == 'last_backup':
             table = db_manager.listBackups(1)
-            print table
-            backup_path = table[0][0]
-            original_path = table[0][1]
-            print "backup path: " + backup_path
-            print "original_path: " + original_path
+            if not table:
+                sys.exit('There are no backups in the database.')
         else:
-            print 'you specified a backup'
+            table = db_manager.listBackups(1, backup_path=args.backup_path)
+            if not table:
+                q = args.backup_path + " is not a registered backup. Do you want to restore it anyway?"
+                restore = questions.queryYesNo(q, default="no")
+                if restore:
+                    backup_path = args.backup_path
+                    original_path = questions.askForInput(
+                        "Insert the restore path.")
+                else:
+                    sys.exit('Restore canceled.')
+
+        if not backup_path: backup_path = table[0][0]
+        if not original_path: original_path = table[0][1]
+
+        logging.debug("backup path: " + backup_path)
+        logging.debug("original_path: " + original_path)
+        compressor.decompress(backup_path, restore_path=original_path)
 
     if args.entries_number:
         db_manager = DatabaseManager()
@@ -112,5 +123,3 @@ if __name__ == '__main__':
         else:
             headers = ['backup path', 'original path', 'date']
             print tabulate(table, headers, tablefmt="fancy_grid")
-    # else:
-        # parser.print_help()
