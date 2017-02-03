@@ -17,8 +17,9 @@ __version__ = "1.0"
 __status__ = "Prototype"
 __date__ = "2016-10-11"
 
-import sqlite3
+import logging
 import os
+import sqlite3
 
 
 class DatabaseManager:
@@ -42,7 +43,7 @@ class DatabaseManager:
                 file_path TEXT,
                 original_path TEXT,
                 backup_date DATE,
-                synced BOOLEAN,
+                encrypted BOOLEAN,
                 UNIQUE(file_path)
             );
         """)
@@ -63,28 +64,36 @@ class DatabaseManager:
             for command in commands:
                 cursor.execute(command)
 
-    def addBackup(self, file_path, original_path, backup_date, synced):
+    def addBackup(self, file_path, original_path, backup_date, encrypted):
         connection = sqlite3.connect(self.db_path)
         with connection:
             cursor = connection.cursor()
-            cursor.executemany("INSERT INTO backups(file_path, original_path, backup_date, synced) VALUES (?,?,?,?)", [
-                               file_path, original_path, backup_date, synced])
+            cursor.executemany("INSERT INTO backups(file_path, original_path, backup_date, encrypted) VALUES (?,?,?,?)", [
+                               file_path, original_path, backup_date, encrypted])
 
-    def listBackups(self, n=3, backup_path=None):
+    def listBackups(self, n=3, backup_path=None, enc=False):
         '''
         Returns a list of the last n backups
         ordered by date
+            n:
+                the number of rows to return
+            backup_path:
+                the backup to select
+            enc:
+                whether to display the "encrypted" column
         '''
         self.cleanDatabase()
         connection = sqlite3.connect(self.db_path)
         cursor = connection.cursor()
         backups = []
-        if backup_path:
-            query = "select file_path, original_path, backup_date from backups where file_path = \'%s\' order by backup_date desc limit %s" % (
-                backup_path, str(n))
+        if enc:
+            select = "select file_path, original_path, backup_date, encrypted from backups"
         else:
-            query = "select file_path, original_path, backup_date from backups order by backup_date desc limit " + \
-                str(n)
+            select = "select file_path, original_path, backup_date from backups"
+        where = "where file_path = '" + backup_path +"'" if backup_path else ''
+        order = "order by backup_date desc"
+        limit = "limit " + str(n)
+        query = select + " " + where + " " + order + " " + limit
         for entry in cursor.execute(query):
             backups.append(entry)
         connection.close()
@@ -95,6 +104,7 @@ class DatabaseManager:
         Cleans the database
         removing entries that no longer exist
         '''
+        logging.debug('Cleaning the database...')
         query = "select file_path from backups"
         connection = sqlite3.connect(self.db_path)
         with connection:
@@ -103,8 +113,10 @@ class DatabaseManager:
             cursor.execute(query)
             for res in cursor.fetchall():
                 folder = res[0]
-                if not os.path.exists(folder):
+                if not (os.path.exists(folder) or os.path.exists(folder + '.enc')):
                     # sorry for that, but i couldn't find any better way.
+                    logging.debug(folder + " doesn't exist. Removing entry...")
                     cursor.execute(
                         "delete from backups where file_path = \'%s\'" % folder)
+        logging.debug('Done.')
         return results
