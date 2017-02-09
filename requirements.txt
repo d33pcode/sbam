@@ -1,0 +1,8 @@
+# agents/utils/progressbar.py: 13
+progress == 1.2
+
+# agents/encrypter.py: 17
+pycrypto == 2.6.1
+
+# sbam.py: 22
+tabulate == 0.7.7
