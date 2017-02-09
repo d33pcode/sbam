@@ -18,7 +18,7 @@ import tarfile
 
 from utils import parser, questions
 
-
+# WARNING: this way the archive created contains the whole dir tree!
 def compress(path):
     '''
     Stores a folder inside a tar archive compressed with bzip2
@@ -28,10 +28,9 @@ def compress(path):
         the path of the new archive or None
     '''
     archive_path = generate_archive_path(path=path)
-
     if (os.path.exists(archive_path)):
         replace = questions.queryYesNo(
-            "WARNING: you already did a backup today. Do you want to replace it?", default="no")
+            "WARNING: you already did a backup today. Do you want to replace it?", default="no")    # because of the archive's name
         if not replace:
             logging.info('Backup canceled.')
             return None
@@ -43,7 +42,7 @@ def compress(path):
             for f in files:
                 logging.debug(
                     'Adding ' + os.path.join(subdir, f) + ' to the archive.')
-                archive.add(os.path.join(subdir, f))
+                archive.add(os.path.join(subdir, f))    # to avoid full dir tree, cd there THEN add
     return archive_path
 
 

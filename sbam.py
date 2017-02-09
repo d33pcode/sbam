@@ -122,7 +122,7 @@ if __name__ == '__main__':
         logging.debug("original_path: " + original_path)
         if enc:
             logging.info('The selected backup is encrypted.')
-            key = getpass('Insert the password: ')
+            key = getpass('Insert the password: ')  # add support for wrong passwords!
             logging.debug('Decrypting...')
             encrypter.decrypt(backup_path+".enc", backup_path, key)
         logging.debug('Decompressing...')
