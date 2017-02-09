@@ -1,7 +1,7 @@
 language: python
 
 # sbam needs to be run as root
-sudo: false
+sudo: required
 
 python:
   # - "2.6"
@@ -16,7 +16,7 @@ python:
 # command to install dependencies
 install:
   - pip install --upgrade pip
-  - pip install -r requirements-dev.txt
+  - pip install -r requirements.txt
 
 # command to run tests
 script: pytest
