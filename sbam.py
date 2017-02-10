@@ -27,6 +27,107 @@ from agents.utils import parser, questions
 from agents.utils.progressbar import ProgressBar
 from dirtools import Dir
 
+
+def backup_table(n):
+    """
+    A list of the first n backups.
+    """
+    db_manager = DatabaseManager()
+    table = db_manager.listBackups(n)
+    if not table:
+        logging.info("There are no backups here.")
+        return
+    else:
+        headers = ['backup path', 'original path', 'date']
+        return tabulate(table, headers, tablefmt="fancy_grid")
+
+
+def backup(folder, encrypt, forget):
+    """
+    Creates a new backup.
+    folder:
+        the path to the folder to compress
+    encrypt:
+        encrypts the folder if True
+    forget:
+        does not create a new database entry if True
+    """
+    path = os.path.realpath(folder)
+    if not (os.path.isdir(path)):
+        sys.exit('Please specify a folder.')
+    path_dirs = path.split('/')
+    dirname = path_dirs[len(path_dirs) - 1]
+
+    logging.info('Compressing ' + dirname + '...')
+    compressed_path = compressor.compress(path)
+
+    if (compressed_path):
+        logging.info('Done.')
+        if encrypt:
+            key = getpass('Insert a password: ')
+            encrypter.encrypt(compressed_path, key)
+            logging.info('Backup encrypted.')
+        if not forget:
+            logging.debug('Updating the database...')
+            today = datetime.today().isoformat().split('.')[0]
+            db_manager = DatabaseManager()
+            db_manager.handleTransaction("INSERT OR IGNORE INTO backups(file_path, original_path, backup_date, encrypted) VALUES(\'" +
+                                         compressed_path + "\', \'" + path + "\', \'" + today + "\', " + str(int(encrypt)) + ")")
+            logging.info('Database updated.')
+        else:
+            logging.debug(
+                'FORGET option specified: backup not saved to database.')
+
+
+def restore(folder):
+    """
+    Restores a backup.
+    folder:
+        the path to the folder to decompress
+    """
+    db_manager = DatabaseManager()
+    backup_path = ''
+    original_path = ''
+
+    if folder == 'last_backup':
+        table = db_manager.listBackups(n=1, enc=True)
+        if not table:
+            sys.exit('There are no backups in the database.')
+    else:
+        table = db_manager.listBackups(n=1, backup_path=folder, enc=True)
+        if not table:
+            q = folder + " is not a registered backup. Do you want to restore it anyway?"
+            restore = questions.queryYesNo(q, default="no")
+            if restore:
+                backup_path = folder
+                original_path = questions.askForInput(
+                    "Insert the restore path.")
+            else:
+                sys.exit('Restore canceled.')
+
+    if not backup_path:
+        backup_path = table[0][0]
+    if not original_path:
+        original_path = table[0][1]
+    enc = table[0][-1]
+    logging.debug("backup path: " + backup_path)
+    logging.debug("original path: " + original_path)
+    if enc:
+        logging.info('The selected backup is encrypted.')
+        # add support for wrong passwords!
+        key = getpass('Insert the password: ')
+        logging.debug('Decrypting...')
+        encrypter.decrypt(backup_path + ".enc", backup_path, key)
+    logging.debug('Decompressing...')
+    compressor.decompress(backup_path, restore_path=original_path)
+    logging.info('Backup restored to ' + original_path)
+
+
+def verbosity(v):
+    l = logging.DEBUG if v else logging.INFO
+    logging.basicConfig(format='%(message)s', level=l)
+
+
 if __name__ == '__main__':
     if not os.geteuid() == 0:  # check root privileges
         sys.exit('Administrator privileges are required.')
@@ -54,88 +155,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # LOGGING
-
-    if args.verbose:
-        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-    else:
-        logging.basicConfig(format='%(message)s', level=logging.INFO)
+    verbosity(args.verbose)
 
     # BACKUP
-
     if args.folder:
-        path = os.path.realpath(args.folder)
-        if not (os.path.isdir(path)):
-            sys.exit('Please specify a folder.')
-        path_dirs = path.split('/')
-        dirname = path_dirs[len(path_dirs) - 1]
-
-        logging.info('Compressing ' + dirname + '...')
-        compressed_path = compressor.compress(path)
-
-        if (compressed_path):
-            logging.info('Done.')
-            encrypted = 0
-            if args.encrypt:
-                encrypted = 1
-                key = getpass('Insert a password: ')
-                encrypter.encrypt(compressed_path, key)
-                logging.info('Backup encrypted.')
-
-            if not args.forget:
-                logging.debug('Updating the database...')
-                today = datetime.today().isoformat().split('.')[0]
-                db_manager = DatabaseManager()
-                db_manager.handleTransaction("INSERT OR IGNORE INTO backups(file_path, original_path, backup_date, encrypted) VALUES(\'" +
-                                             compressed_path + "\', \'" + path + "\', \'" + today + "\', " + str(encrypted) + ")")
-                logging.info('Database updated.')
-            else:
-                logging.debug(
-                    'FORGET option specified: backup not saved to database.')
+        backup(args.folder, args.encrypt, args.forget)
 
     # RESTORE
-
     elif args.backup_path:
-        db_manager = DatabaseManager()
-        backup_path = ''
-        original_path = ''
-
-        if args.backup_path == 'last_backup':
-            table = db_manager.listBackups(n=1, enc=True)
-            if not table:
-                sys.exit('There are no backups in the database.')
-        else:
-            table = db_manager.listBackups(n=1, backup_path=args.backup_path, enc=True)
-            if not table:
-                q = args.backup_path + " is not a registered backup. Do you want to restore it anyway?"
-                restore = questions.queryYesNo(q, default="no")
-                if restore:
-                    backup_path = args.backup_path
-                    original_path = questions.askForInput(
-                        "Insert the restore path.")
-                else:
-                    sys.exit('Restore canceled.')
-
-        if not backup_path: backup_path = table[0][0]
-        if not original_path: original_path = table[0][1]
-        enc = table[0][-1]
-        logging.debug("backup path: " + backup_path)
-        logging.debug("original_path: " + original_path)
-        if enc:
-            logging.info('The selected backup is encrypted.')
-            key = getpass('Insert the password: ')  # add support for wrong passwords!
-            logging.debug('Decrypting...')
-            encrypter.decrypt(backup_path+".enc", backup_path, key)
-        logging.debug('Decompressing...')
-        compressor.decompress(backup_path, restore_path=original_path)
-        logging.info('Backup restored to ' + original_path)
+        restore(args.backup_path)
 
     # LIST
-
     if args.entries_number:
-        db_manager = DatabaseManager()
-        table = db_manager.listBackups(args.entries_number)
-        if not table:
-            logging.info("There are no backups here.")
-        else:
-            headers = ['backup path', 'original path', 'date']
-            print tabulate(table, headers, tablefmt="fancy_grid")
+        print backup_table(args.entries_number)
