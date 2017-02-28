@@ -13,10 +13,10 @@ __status__ = "Prototype"
 __date__ = "2016-10-10"
 
 import argparse
+import datetime
 import logging
 import os
 import sys
-from datetime import datetime
 from getpass import getpass
 
 from tabulate import tabulate
@@ -69,7 +69,7 @@ def backup(folder, encrypt, forget):
             logging.info('Backup encrypted.')
         if not forget:
             logging.debug('Updating the database...')
-            today = datetime.today().isoformat().split('.')[0]
+            today = datetime.datetime.today().isoformat().split('.')[0]
             db_manager = DatabaseManager()
             db_manager.handleTransaction("INSERT OR IGNORE INTO backups(file_path, original_path, backup_date, encrypted) VALUES(\'" +
                                          compressed_path + "\', \'" + path + "\', \'" + today + "\', " + str(int(encrypt)) + ")")
@@ -77,6 +77,7 @@ def backup(folder, encrypt, forget):
         else:
             logging.debug(
                 'FORGET option specified: backup not saved to database.')
+    return compressed_path
 
 
 def restore(folder):
@@ -125,7 +126,7 @@ def restore(folder):
 
 def verbosity(v):
     l = logging.DEBUG if v else logging.INFO
-    logging.basicConfig(format='%(message)s', level=l)
+    return logging.basicConfig(format='%(message)s', level=l)
 
 
 if __name__ == '__main__':

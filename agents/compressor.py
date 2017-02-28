@@ -66,7 +66,7 @@ def generate_archive_path(path, base_path='/var/backups/sbam/'):
     example:
         /var/backups/sbam/Dev-2016-10-10
     '''
-    logging.debug('Geneating archive path...')
+    logging.debug('Generating archive path...')
     if (not os.path.exists(base_path)):
         os.makedirs(base_path)
     path_dirs = path.split('/')
