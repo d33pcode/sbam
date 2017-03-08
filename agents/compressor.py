@@ -16,9 +16,11 @@ import os
 import sys
 import tarfile
 
-from utils import parser, questions
+from utils import questions
 
 # WARNING: this way the archive created contains the whole dir tree!
+
+
 def compress(path):
     '''
     Stores a folder inside a tar archive compressed with bzip2
@@ -42,7 +44,8 @@ def compress(path):
             for f in files:
                 logging.debug(
                     'Adding ' + os.path.join(subdir, f) + ' to the archive.')
-                archive.add(os.path.join(subdir, f))    # to avoid full dir tree, cd there THEN add
+                # to avoid full dir tree, cd there THEN add
+                archive.add(os.path.join(subdir, f))
     return archive_path
 
 

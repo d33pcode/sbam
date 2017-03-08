@@ -23,7 +23,7 @@ from tabulate import tabulate
 
 from agents import compressor, encrypter
 from agents.databasemanager import DatabaseManager
-from agents.utils import parser, questions
+from agents.utils import questions
 from agents.utils.progressbar import ProgressBar
 from dirtools import Dir
 
