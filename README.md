@@ -45,7 +45,7 @@ sbam -ef folder/to/backup
 ```
 This will prompt you for a password.
 
-If you don't want Sbam to register your backup, you need to pass it the `--forget` option while backing up the folder:
+If you don't want Sbam to register your backup, use the `--forget` option while backing up the folder:
 ```
 sbam -Ff folder/to/compress
 ```
