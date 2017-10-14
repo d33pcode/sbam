@@ -10,7 +10,7 @@ It provides functions to backup and restore directories, list the current backup
 ### Installation
 ---
 - Clone the project
-- Install the requirements with `pigar -c` (remember to `sudo pip install pigar`)
+- Install the requirements with `sudo pip install -r requirements.txt`
 - `sudo ln -s /path/to/sbam/sbam.py /usr/bin/sbam` to use it outside its folder. In the rest of this file I'll assume you can run `sbam` from everywhere in the terminal. If you skip this step, you can use `./sbam.py` inside your installation folder.
 
 ### Basic usage

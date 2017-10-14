@@ -154,6 +154,9 @@ if __name__ == '__main__':
                         help='Display verbose output', action='store_true')
     args = parser.parse_args()
 
+    if not (args.folder or args.backup_path or args.entries_number):
+        sys.exit(parser.print_help())
+
     # LOGGING
     verbosity(args.verbose)
 
