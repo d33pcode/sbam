@@ -16,7 +16,7 @@ import os
 import sys
 import tarfile
 
-from utils import questions
+from agents.utils import questions
 
 # WARNING: this way the archive created contains the whole dir tree!
 

@@ -170,4 +170,4 @@ if __name__ == '__main__':
 
     # LIST
     if args.entries_number:
-        print backup_table(args.entries_number)
+        print(backup_table(args.entries_number))
